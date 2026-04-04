@@ -48,7 +48,7 @@ fi
 echo "[INFO] Installing TRELLIS(v1) requirements on top of TRELLIS.2..."
 pip install pymeshfix igraph 
 git clone https://github.com/autonomousvision/mip-splatting.git /tmp/extensions/mip-splatting
-pip install /tmp/extensions/mip-splatting/submodules/diff-gaussian-rasterization/
+pip install /tmp/extensions/mip-splatting/submodules/diff-gaussian-rasterization/ --no-build-isolation
 
 # for systems with glibc < 2.29 , you may need to build kaolin from source manually
 echo "[NOTE] For systems with glibc < 2.29, you may need to build kaolin from source manually"
@@ -205,7 +205,7 @@ echo ""
 echo "========================================"
 echo "Installing UltraShape Dependencies"
 echo "========================================"
-cd ../../../thirdparty/UltraShape
+cd ../UltraShape
 echo "[INFO] Installing UltraShape requirements..."
 # pip install -r requirements.txt
 # actually only cubvh is required based besides trellis.2 env  
@@ -228,7 +228,7 @@ echo "[INFO] Installing VoxHammer requirements..."
 # pip install -r requirements.txt
 # only bpy-renderer and pysdf are required besides trellis.2 env  
 pip install git+https://github.com/huanngzh/bpy-renderer.git
-pip install pysdf setencepiece
+pip install pysdf sentencepiece
 if [ $? -eq 0 ]; then
     echo "[SUCCESS] VoxHammer requirements installed"
 else
