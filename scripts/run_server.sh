@@ -109,53 +109,12 @@ else
 fi
 echo ""
 
-# Singleton detection: ensure no other instance is running on the API port
-echo "🔍 Checking for existing processes on port $API_PORT..."
-EXISTING_PIDS=$(lsof -ti :"$API_PORT" 2>/dev/null || true)
-if [ -n "$EXISTING_PIDS" ]; then
-    echo "⚠️  Found processes occupying port $API_PORT: $EXISTING_PIDS"
-    echo "   Killing existing processes..."
-    for pid in $EXISTING_PIDS; do
-        kill "$pid" 2>/dev/null || true
-    done
-    sleep 2
-    # Force kill any remaining processes
-    REMAINING_PIDS=$(lsof -ti :"$API_PORT" 2>/dev/null || true)
-    if [ -n "$REMAINING_PIDS" ]; then
-        echo "   Force killing remaining processes..."
-        for pid in $REMAINING_PIDS; do
-            kill -9 "$pid" 2>/dev/null || true
-        done
-        sleep 1
-    fi
-    echo "✅ Port $API_PORT cleared"
-else
-    echo "✅ Port $API_PORT is available"
-fi
-echo ""
-
 # Create PID directory for tracking processes
 PID_DIR="./run"
 mkdir -p "$PID_DIR"
 
 SCHEDULER_PID_FILE="$PID_DIR/scheduler.pid"
 API_PID_FILE="$PID_DIR/api.pid"
-
-# Clean up stale PID files from previous runs
-for pf in "$SCHEDULER_PID_FILE" "$API_PID_FILE"; do
-    if [ -f "$pf" ]; then
-        OLD_PID=$(cat "$pf")
-        if ps -p "$OLD_PID" > /dev/null 2>&1; then
-            echo "⚠️  Killing stale process from previous run (PID: $OLD_PID)..."
-            kill "$OLD_PID" 2>/dev/null || true
-            sleep 2
-            if ps -p "$OLD_PID" > /dev/null 2>&1; then
-                kill -9 "$OLD_PID" 2>/dev/null || true
-            fi
-        fi
-        rm -f "$pf"
-    fi
-done
 
 # Function to cleanup processes on exit
 cleanup() {
