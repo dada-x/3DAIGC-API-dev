@@ -86,8 +86,17 @@ class Trellis2Runner:
             logger.info("Loading TRELLIS.2 image-to-3D pipeline...")
             from trellis2.pipelines import Trellis2ImageTo3DPipeline
             
+            # Use local model path if available, otherwise fall back to HuggingFace repo ID
+            local_model_path = self.model_cache_dir / "TRELLIS.2-4B"
+            if (local_model_path / "pipeline.json").exists():
+                model_source = str(local_model_path)
+                logger.info(f"Using local model: {model_source}")
+            else:
+                model_source = "microsoft/TRELLIS.2-4B"
+                logger.info(f"Local model not found, downloading from: {model_source}")
+            
             self.image_to_3d_pipeline = Trellis2ImageTo3DPipeline.from_pretrained(
-                "microsoft/TRELLIS.2-4B"
+                model_source
             )
             
             if self.device == "cuda":
@@ -108,8 +117,17 @@ class Trellis2Runner:
             logger.info("Loading TRELLIS.2 texturing pipeline...")
             from trellis2.pipelines import Trellis2TexturingPipeline
             
+            # Use local model path if available, otherwise fall back to HuggingFace repo ID
+            local_model_path = self.model_cache_dir / "TRELLIS.2-4B"
+            if (local_model_path / "texturing_pipeline.json").exists():
+                model_source = str(local_model_path)
+                logger.info(f"Using local model: {model_source}")
+            else:
+                model_source = "microsoft/TRELLIS.2-4B"
+                logger.info(f"Local model not found, downloading from: {model_source}")
+            
             self.texturing_pipeline = Trellis2TexturingPipeline.from_pretrained(
-                "microsoft/TRELLIS.2-4B",
+                model_source,
                 config_file="texturing_pipeline.json"
             )
             

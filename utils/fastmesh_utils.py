@@ -115,20 +115,11 @@ class FastMeshRunner:
                 mixed_precision=self.precision, kwargs_handlers=[kwargs]
             )
 
-            # Load model from pretrained
+            # Load model from local pretrained directory
             model_name = "MeshGen"  # Default model name in FastMesh
-            if self.variant == "V1K":
-                self.model = MODELS[model_name].from_pretrained(
-                    "WopperSet/FastMesh-V1K",
-                    local_dir=str(self.model_path),
-                    cache_dir=str(self.model_path),
-                )
-            elif self.variant == "V4K":
-                self.model = MODELS[model_name].from_pretrained(
-                    "WopperSet/FastMesh-V4K",
-                    local_dir=str(self.model_path),
-                    cache_dir=str(self.model_path),
-                )
+            self.model = MODELS[model_name].from_pretrained(
+                str(self.model_path),
+            )
 
             # Prepare model with accelerator
             self.model = self.accelerator.prepare(self.model)

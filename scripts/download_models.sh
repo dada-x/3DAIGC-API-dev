@@ -332,6 +332,35 @@ download_trellis2() {
         print_error "Failed to download TRELLIS.2-4B model"
         return 1
     fi
+
+    # Download TRELLIS.2 dependencies (DINOv3 and RMBG-2.0)
+    local dinov3_dir="pretrained/dinov3-vitl16"
+    if [ "$FORCE_DOWNLOAD" = false ] && verify_directory "$dinov3_dir" 3; then
+        print_info "DINOv3 model already exists and verified"
+    else
+        mkdir -p "$dinov3_dir"
+        print_info "Downloading DINOv3 model (TRELLIS.2 dependency)..."
+        if repo_download "facebook/dinov3-vitl16-pretrain-lvd1689m" "$dinov3_dir"; then
+            print_success "DINOv3 model downloaded successfully"
+        else
+            print_error "Failed to download DINOv3 model"
+            return 1
+        fi
+    fi
+
+    local rmbg_dir="pretrained/RMBG-2.0"
+    if [ "$FORCE_DOWNLOAD" = false ] && verify_directory "$rmbg_dir" 3; then
+        print_info "RMBG-2.0 model already exists and verified"
+    else
+        mkdir -p "$rmbg_dir"
+        print_info "Downloading RMBG-2.0 model (TRELLIS.2 dependency)..."
+        if repo_download "briaai/RMBG-2.0" "$rmbg_dir"; then
+            print_success "RMBG-2.0 model downloaded successfully"
+        else
+            print_error "Failed to download RMBG-2.0 model"
+            return 1
+        fi
+    fi
 }
 
 # Function to download P3-SAM model
@@ -437,17 +466,47 @@ download_fastmesh() {
 
     if [ "$FORCE_DOWNLOAD" = false ] && verify_directory "$model_dir_v4k" 3; then
         print_info "FastMesh v4k model already exists and verified"
-        return 0
-    fi
-    
-    mkdir -p "$model_dir_v4k"
-    print_info "Downloading FastMesh v4k model from Hugging Face..."
-    if huggingface-cli download "WopperSet/FastMesh-V4K" --local-dir "$model_dir_v4k"; then
-        print_success "FastMesh v4k model downloaded successfully"
     else
-        print_error "Failed to download FastMesh v4k model"
-        return 1
+        mkdir -p "$model_dir_v4k"
+        print_info "Downloading FastMesh v4k model from Hugging Face..."
+        if huggingface-cli download "WopperSet/FastMesh-V4K" --local-dir "$model_dir_v4k"; then
+            print_success "FastMesh v4k model downloaded successfully"
+        else
+            print_error "Failed to download FastMesh v4k model"
+            return 1
+        fi
     fi
+
+    # Download OPT-350m config (FastMesh dependency for ShapeOPTConfig)
+    local opt_dir="pretrained/opt-350m"
+    if [ "$FORCE_DOWNLOAD" = false ] && verify_directory "$opt_dir" 1; then
+        print_info "OPT-350m config already exists and verified"
+    else
+        mkdir -p "$opt_dir"
+        print_info "Downloading OPT-350m config (FastMesh dependency)..."
+        if huggingface-cli download "facebook/opt-350m" config.json --local-dir "$opt_dir"; then
+            print_success "OPT-350m config downloaded successfully"
+        else
+            print_error "Failed to download OPT-350m config"
+            return 1
+        fi
+    fi
+
+    # Patch FastMesh configs to use local OPT-350m path
+    for cfg in "$model_dir_v1k/config.json" "$model_dir_v4k/config.json"; do
+        if [ -f "$cfg" ]; then
+            python3 -c "
+import json
+with open('$cfg', 'r') as f:
+    c = json.load(f)
+if c.get('llm') != '$opt_dir':
+    c['llm'] = '$opt_dir'
+    with open('$cfg', 'w') as f:
+        json.dump(c, f, indent=2)
+    print('Patched $cfg')
+"
+        fi
+    done
 }
 
 # Function to download PartUV models 
