@@ -1,0 +1,1 @@
+Env: WSL2 Ubuntu 22.04 · RTX 5090 sm_120 · 32GB VRAM · 48GB RAM · conda aigc · Python 3.11 · PyTorch 2.10+cu130
