@@ -34,6 +34,7 @@ MODELS_TO_DOWNLOAD="all"
 VERIFY_ONLY=false
 FORCE_DOWNLOAD=false
 
+
 # Available models
 AVAILABLE_MODELS=("partfield" "hunyuan21" "trellis" "trellis-text" "trellis2" "p3sam" "unirig" "partpacker" "partuv" "fastmesh" "ultrashape" "misc" "all")
 
@@ -66,7 +67,7 @@ Available models:
     all           - Download all models
 
 Examples:
-    $0                                    # Download all models
+    $0                                    # Download all models (from ModelScope)
     $0 -m trellis                         # Download only TRELLIS
     $0 -v                                # Verify all existing models
     $0 -m partfield -f                   # Force re-download PartField model
@@ -183,6 +184,19 @@ download_with_verify() {
     fi
 }
 
+# Download model from ModelScope
+# Usage: repo_download <repo_id> <local_dir> [extra_args...]
+repo_download() {
+    local repo_id="$1"
+    local local_dir="$2"
+    shift 2
+    local extra_args=("$@")
+
+    mkdir -p "$local_dir"
+    print_info "Downloading from ModelScope: $repo_id -> $local_dir"
+    modelscope download --model "$repo_id" --local_dir "$local_dir" "${extra_args[@]}"
+}
+
 # Function to download PartField model
 download_partfield() {
     print_info "========================================"
@@ -218,9 +232,8 @@ download_hunyuan2mini() {
     
     mkdir -p "$model_dir"
     print_info "Downloading Hunyuan3D 2.0 mini (geometry/vae)..."
-    if huggingface-cli download  tencent/Hunyuan3D-2mini \
-        --include "hunyuan3d-dit-v2-mini-turbo/*" "hunyuan3d-vae-v2-mini-turbo/*" \
-        --local-dir "$model_dir"; then
+    if repo_download "tencent/Hunyuan3D-2mini" "$model_dir" \
+        --include "hunyuan3d-dit-v2-mini-turbo/*" "hunyuan3d-vae-v2-mini-turbo/*"; then
         print_success "Hunyuan3D 2.0 mini models downloaded successfully"
     else
         print_error "Failed to download Hunyuan3D 2.0 mini models"
@@ -243,9 +256,8 @@ download_hunyuan21() {
     
     mkdir -p "$model_dir"
     print_info "Downloading Hunyuan3D 2.1 models..."
-    # if huggingface-cli download  tencent/Hunyuan3D-2.1 --local-dir "$model_dir"; then
     # download from my fork, which fixes the multi-gpu inference bug of the original repo 
-    if huggingface-cli download fishwowater/Hunyuan3D-2.1 --local-dir "$model_dir"; then
+    if repo_download "Tencent-Hunyuan/Hunyuan3D-2.1" "$model_dir"; then
         print_success "Hunyuan3D 2.1 models downloaded successfully"
     else
         print_error "Failed to download Hunyuan3D 2.1 models"
@@ -268,7 +280,7 @@ download_trellis() {
     
     mkdir -p "$model_dir"
     print_info "Downloading TRELLIS image-large model..."
-    if huggingface-cli download  microsoft/TRELLIS-image-large --local-dir "$model_dir"; then
+    if repo_download "microsoft/TRELLIS-image-large" "$model_dir"; then
         print_success "TRELLIS image-large model downloaded successfully"
     else
         print_error "Failed to download TRELLIS image-large model"
@@ -291,7 +303,7 @@ download_trellis_text() {
     
     mkdir -p "$model_dir"
     print_info "Downloading TRELLIS text-xlarge model (optional, for text-conditioned part re-texturing)..."
-    if huggingface-cli download  microsoft/TRELLIS-text-xlarge --local-dir "$model_dir"; then
+    if repo_download "microsoft/TRELLIS-text-xlarge" "$model_dir"; then
         print_success "TRELLIS text-xlarge model downloaded successfully"
     else
         print_error "Failed to download TRELLIS text-xlarge model"
@@ -314,7 +326,7 @@ download_trellis2() {
     
     mkdir -p "$model_dir"
     print_info "Downloading TRELLIS.2-4B model (image-based generation only)..."
-    if huggingface-cli download  microsoft/TRELLIS.2-4B --local-dir "$model_dir"; then
+    if repo_download "microsoft/TRELLIS.2-4B" "$model_dir"; then
         print_success "TRELLIS.2-4B model downloaded successfully"
     else
         print_error "Failed to download TRELLIS.2-4B model"
@@ -370,7 +382,7 @@ download_unirig() {
     
     mkdir -p "$model_dir"
     print_info "Downloading UniRig model..."
-    if huggingface-cli download  VAST-AI/UniRig --local-dir "$model_dir"; then
+    if repo_download "VAST-AI-Research/UniRig" "$model_dir"; then
         print_success "UniRig model downloaded successfully"
     else
         print_error "Failed to download UniRig model"
@@ -393,7 +405,7 @@ download_partpacker() {
     
     mkdir -p "$model_dir"
     print_info "Downloading PartPacker model..."
-    if huggingface-cli download  nvidia/PartPacker --local-dir "$model_dir"; then
+    if repo_download "nv-community/PartPacker" "$model_dir"; then
         print_success "PartPacker model downloaded successfully"
     else
         print_error "Failed to download PartPacker model"
@@ -415,11 +427,11 @@ download_fastmesh() {
     fi
     
     mkdir -p "$model_dir_v1k"
-    print_info "Downloading FastMesh v1k model..."
-    if huggingface-cli download  "WopperSet/FastMesh-V1K" --local-dir "$model_dir_v1k"; then
+    print_info "Downloading FastMesh v1k model from Hugging Face..."
+    if huggingface-cli download "WopperSet/FastMesh-V1K" --local-dir "$model_dir_v1k"; then
         print_success "FastMesh v1k model downloaded successfully"
     else
-        print_error "Failed to download FastMeshv1k model"
+        print_error "Failed to download FastMesh v1k model"
         return 1
     fi
 
@@ -429,11 +441,11 @@ download_fastmesh() {
     fi
     
     mkdir -p "$model_dir_v4k"
-    print_info "Downloading FastMesh v4k model..."
-    if huggingface-cli download  "WopperSet/FastMesh-V4K" --local-dir "$model_dir_v4k"; then
+    print_info "Downloading FastMesh v4k model from Hugging Face..."
+    if huggingface-cli download "WopperSet/FastMesh-V4K" --local-dir "$model_dir_v4k"; then
         print_success "FastMesh v4k model downloaded successfully"
     else
-        print_error "Failed to download FastMeshv4k model"
+        print_error "Failed to download FastMesh v4k model"
         return 1
     fi
 }
@@ -512,8 +524,7 @@ download_misc() {
     else
         mkdir -p "$dinov2_dir"
         print_info "Downloading DINOv2-giant model..."
-        if huggingface-cli download  facebook/dinov2-giant \
-            --local-dir "$dinov2_dir" --exclude "*.bin"; then
+        if repo_download "facebook/dinov2-giant" "$dinov2_dir" --exclude "*.bin"; then
             print_success "DINOv2-giant model downloaded successfully"
         else
             print_error "Failed to download DINOv2-giant model"
@@ -577,10 +588,10 @@ print_info "========================================"
 print_info "3DAIGC Model Download Script"
 print_info "========================================"
 
-# Check if huggingface-cli is available
-if ! command -v huggingface-cli &> /dev/null; then
-    print_error "huggingface-cli is not installed. Please install it first:"
-    print_error "pip install huggingface_hub"
+# Check if modelscope CLI is available
+if ! command -v modelscope &> /dev/null; then
+    print_error "modelscope CLI is not installed. Please install it first:"
+    print_error "  pip install modelscope"
     exit 1
 fi
 
@@ -646,10 +657,10 @@ for model in "${MODELS_ARRAY[@]}"; do
             ;;
         "all")
             download_partfield
-            download_hunyuan2mini
+            # download_hunyuan2mini
             download_hunyuan21
-            download_trellis
-            download_trellis_text
+            # download_trellis
+            # download_trellis_text
             download_trellis2
             download_p3sam
             download_unirig
